@@ -31,9 +31,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
+import javax.validation.Valid;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -56,16 +62,24 @@ public class CustomerController {
         return new Customer(-1, username, password, emailAddress);
     }
 
-    //TODO: get the parameter mappings to work with the given webform
-    //TODO: make this method correctly insert data into the database
+    //CustomerForm is a model entity class with variable names that match the form's input tag attributes
+    //https://stackoverflow.com/questions/15497738/handle-form-post-with-a-array-of-items-in-spring-mvc
     @RequestMapping(value = "/helloworld-webapp/customer/customers", method = RequestMethod.POST)
-    public Customer customerStore(
-            @RequestParam(value = "username", defaultValue = "defaultUsername") String username,
-            @RequestParam(value = "password", defaultValue = "defaultPassword") String password,
-            @RequestParam(value = "emailAddr", defaultValue = "defaultEmail") String emailAddress
-    ) {
-        Customer customer = new Customer(-1, username, password, emailAddress);
+    public Customer customerStore(@ModelAttribute CustomerForm customerForm) {
+        int id = 999;
+        String username = "USERNAME NOT SUPPORTED BY FORM";
+        String password = customerForm.getInputPassword();  
+        String emailAddress = customerForm.getInputEmail();
+        if (emailAddress == null) emailAddress = "REQUEST NOT READ";
+        Customer customer = new Customer(id, username, password, emailAddress);
+        System.out.println(customer.toString());
+        return customer;
+    }
 
+    @RequestMapping(value = "/helloworld-webapp/customer/customers/jsonSubmit", method = RequestMethod.POST)
+    public @ResponseBody Customer jsonSubmit(@RequestBody Customer customer) {
+        //model.addAttribute("customer", customer);
+        System.out.println("Returning: " + customer.toString());
         return customer;
     }
 
