@@ -38,8 +38,9 @@ import java.util.Map;
 
 /**
  *
- * @author Stephen R. Williams Attempt at a SQL query runner that is agnostic to
- * table structure
+ * @author Stephen R. Williams 
+ * Attempt at a SQL query runner that is agnostic to entity structure
+ * query returns a list of hashmaps which require parsing into an entity class
  */
 public class MyDatabaseConn {
 
@@ -66,20 +67,62 @@ public class MyDatabaseConn {
         this.PASS = pass;
     }
 
-    public List<Map> runQuery(String statement) {
+    public void insert(String sql) {
         Connection conn = null;
         Statement stmt = null;
-        List<Map> tableReturned = null;
         try {
             //STEP 2: Register JDBC driver
             Class.forName("com.mysql.jdbc.Driver");
 
             //STEP 3: Open a connection
-            System.out.println("Connecting to database...");
+            //System.out.println("Connecting to a selected database...");
+            conn = DriverManager.getConnection(DB_URL, USER, PASS);
+            //System.out.println("Connected database successfully...");
+
+            //STEP 4: Execute a query
+            //System.out.println("Inserting records into the table...");
+            stmt = conn.createStatement();
+            stmt.executeUpdate(sql);
+            //System.out.println("Inserted records into the table...");
+
+        } catch (SQLException se) {
+            //Handle errors for JDBC
+            se.printStackTrace();
+        } catch (Exception e) {
+            //Handle errors for Class.forName
+            e.printStackTrace();
+        } finally {
+            //finally block used to close resources
+            try {
+                if (stmt != null) {
+                    conn.close();
+                }
+            } catch (SQLException se) {
+            }// do nothing
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException se) {
+                se.printStackTrace();
+            }//end finally try
+        }//end try
+    }
+
+    public List<Map<String, Object>> runQuery(String statement) {
+        Connection conn = null;
+        Statement stmt = null;
+        List<Map<String, Object>> tableReturned = null;
+        try {
+            //STEP 2: Register JDBC driver
+            Class.forName("com.mysql.jdbc.Driver");
+
+            //STEP 3: Open a connection
+            //System.out.println("Connecting to database...");
             conn = DriverManager.getConnection(DB_URL, USER, PASS);
 
             //STEP 4: Execute a query
-            System.out.println("Creating statement...");
+            //System.out.println("Creating statement...");
             stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(statement);//SQL statement is passed in method argument
             //https://stackoverflow.com/questions/2614416/how-to-get-the-number-of-columns-from-a-jdbc-resultset
@@ -94,14 +137,14 @@ public class MyDatabaseConn {
                 columnNames.add(rsmd.getColumnName(h));
             }
 
-            //Map with column name as key, this map acts as a row in the table
-            Map<String, Object> record = new HashMap();
             //list as a table that holds all the maps (records)
-            List<Map> table = new ArrayList();
+            List<Map<String, Object>> table = new ArrayList();
 
             //STEP 5: Extract data from result set
-            while (rs.next()) {//for every row               
-                for (int i = 0; i < cols; i++) {
+            while (rs.next()) {//for every row 
+                //Map with column name as key, this map acts as a row in the table
+                Map<String, Object> record = new HashMap();
+                for (int i = 0; i < cols; i++) {//for every column
                     String s = columnNames.get(i);//ZERO BASED
                     Object o = rs.getObject(i + 1);//NOT ZERO BASED
                     //System.out.println("\n"+s+":"+o.toString());
@@ -109,8 +152,10 @@ public class MyDatabaseConn {
                     record.put(s, o);
                 }
                 //put the record into the table
+                //System.out.println("mdb adding " + record.toString());
                 table.add(record);
             }
+
             //assign to return variable to bypass a scoping problem with try/catch
             tableReturned = table;
 
