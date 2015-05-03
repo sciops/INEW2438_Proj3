@@ -25,16 +25,20 @@ package hello;
 
 /**
  *
- * @author Stephen R. Williams
- * Customer entity class                
+ * @author Stephen R. Williams Customer entity class
  */
 public class Customer {
+
     private int id;
     private String username;
     private String password;
     private String emailAddress;
 
+    public Customer() {
+    }
+
     public Customer(int id, String username, String password, String emailAddress) {
+        this.id = id;
         this.username = username;
         this.password = password;
         this.emailAddress = emailAddress;
@@ -72,13 +76,13 @@ public class Customer {
         this.emailAddress = emailAddress;
     }
 
+    public String getInsertStatement() {
+        return "INSERT INTO Customer VALUES " + "('" + id +"','"+ username +"','"+ password +"','"+ emailAddress + "');";
+    }
+
     @Override
     public String toString() {
         return "Customer{" + "id=" + id + ", username=" + username + ", password=" + password + ", emailAddress=" + emailAddress + '}';
     }
 
-
-    
-   
-    
 }

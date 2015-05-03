@@ -26,8 +26,13 @@ package hello;
 /**
  *
  * @author Stephen R. Williams
+ * Spring Controller for Customer class.
+ * CustomerForm class is used by Model to map the given form (webform.html)
+ * 
+ * 
  */
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -52,7 +57,11 @@ public class CustomerController {
     //  Database credentials
     private final static String USER = "root";
     private final static String PASS = "password";
+    
+    private final AtomicLong counter = new AtomicLong();
 
+    //test method to for method constructor testing
+    /*
     @RequestMapping("/customer/test")
     public Customer customerTest(
             @RequestParam(value = "username", defaultValue = "defaultUsername") String username,
@@ -60,45 +69,68 @@ public class CustomerController {
             @RequestParam(value = "emailAddr", defaultValue = "defaultEmail") String emailAddress
     ) {
         return new Customer(-1, username, password, emailAddress);
-    }
+    }*/
 
     //CustomerForm is a model entity class with variable names that match the form's input tag attributes
+    //this method stores two fields. the username is not supported by the form, but was indicated by assignment text.
+    //see webform.html
     //https://stackoverflow.com/questions/15497738/handle-form-post-with-a-array-of-items-in-spring-mvc
     @RequestMapping(value = "/helloworld-webapp/customer/customers", method = RequestMethod.POST)
     public Customer customerStore(@ModelAttribute CustomerForm customerForm) {
-        int id = 999;
+        int id = (int) counter.incrementAndGet();//long cast to int
         String username = "USERNAME NOT SUPPORTED BY FORM";
         String password = customerForm.getInputPassword();  
         String emailAddress = customerForm.getInputEmail();
         if (emailAddress == null) emailAddress = "REQUEST NOT READ";
         Customer customer = new Customer(id, username, password, emailAddress);
-        System.out.println(customer.toString());
+        MyDatabaseConn mdb = new MyDatabaseConn(JDBC_DRIVER, DB_URL, USER, PASS);
+        String statement = customer.getInsertStatement();
+        //System.out.println(statement);
+        mdb.insert(statement);
+        //System.out.println("customerStore returning: "+customer.toString());
         return customer;
     }
 
+    //JSON attempt, will require a new webform design for input, or use a POST request tester
+    //NOTE: had problems constructing a proper POST in POSTMAN extension for Chrome. try Advanced REST tester
+    /*
     @RequestMapping(value = "/helloworld-webapp/customer/customers/jsonSubmit", method = RequestMethod.POST)
     public @ResponseBody Customer jsonSubmit(@RequestBody Customer customer) {
         //model.addAttribute("customer", customer);
-        System.out.println("Returning: " + customer.toString());
+        //System.out.println("Returning: " + customer.toString());
         return customer;
-    }
+    }*/
 
-    @RequestMapping("/customer/report")
+    //This method returns a report showing all the records in the database.
+    //TODO:Chrome does not show linebreaks properly with this, format for prettyer display
+    //http://localhost:8080/helloworld-webapp/customer/report
+    @RequestMapping("/helloworld-webapp/customer/report")
     public String customerReport() {
         MyDatabaseConn mdb = new MyDatabaseConn(JDBC_DRIVER, DB_URL, USER, PASS);
-        List<Map> table = mdb.runQuery("SELECT * FROM customer");
+        List<Map<String, Object>> table = mdb.runQuery("SELECT * FROM customer");
         List<Customer> list = CustomerController.getCustomerList(table);
-        return list.toString();
+        String output = "";
+        if (list.isEmpty())
+            return "DATABASE EMPTY =(";
+        
+        for(Customer c : list) {
+            output+= "\n" + c.toString();
+        }
+        return output;
     }
 
-    public static List<Customer> getCustomerList(List<Map> table) {
+    //utility class that transforms the arraylist of hashmaps into a list of customers.
+    //list of hashmaps is returned by the MyDatabaseConn class, which I designed to be portable for other entities
+    public static List<Customer> getCustomerList(List<Map<String, Object>> table) {
         List<Customer> customers = new ArrayList();
+        Customer customer = null;
         for (Map m : table) {
             int id = (int) m.get("customerID");
             String username = (String) m.get("username");
             String password = (String) m.get("password");
             String emailAddress = (String) m.get("emailAddress");
-            Customer customer = new Customer(id, username, password, emailAddress);
+            customer = new Customer(id, username, password, emailAddress);
+            //System.out.println("Adding "+customer);
             customers.add(customer);
         }
         return customers;

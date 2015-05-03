@@ -38,6 +38,7 @@ public class Application {
     private final static String USER = "root";
     private final static String PASS = "password";
 
+    
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
         testDB();
@@ -46,7 +47,7 @@ public class Application {
     public static void testDB() {
         //database test, outputs all customer records.
         MyDatabaseConn mdb = new MyDatabaseConn(JDBC_DRIVER, DB_URL, USER, PASS);
-        List<Map> table = mdb.runQuery("SELECT * FROM customer");
+        List<Map<String, Object>> table = mdb.runQuery("SELECT * FROM customer");
         List<Customer> customers = CustomerController.getCustomerList(table);
         for (Customer c : customers) {
             System.out.println(c.toString());
