@@ -61,7 +61,6 @@ public class CustomerController {
     private final AtomicLong counter = new AtomicLong();
 
     //test method to for method constructor testing
-    /*
     @RequestMapping("/customer/test")
     public Customer customerTest(
             @RequestParam(value = "username", defaultValue = "defaultUsername") String username,
@@ -69,7 +68,7 @@ public class CustomerController {
             @RequestParam(value = "emailAddr", defaultValue = "defaultEmail") String emailAddress
     ) {
         return new Customer(-1, username, password, emailAddress);
-    }*/
+    }
 
     //CustomerForm is a model entity class with variable names that match the form's input tag attributes
     //this method stores two fields. the username is not supported by the form, but was indicated by assignment text.
